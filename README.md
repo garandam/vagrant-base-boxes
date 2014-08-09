@@ -18,9 +18,9 @@ I created a base Box for Vagrant based on CentOS 6.5 Minimal Install.
   - Vagrant (1.6.3)
   - [Vagrant SSH-"insecure"-Key](https://github.com/mitchellh/vagrant/tree/master/keys)
   - VirtualBox (4.3.12)
-  - Putty
+  - Putty or Git-Bash
 
-Create VM in VirtualBox
+Create VM in VirtualBox without GUI
 --------------
 To begin, we have to configure a new VM in VirtualBox.
 
@@ -40,10 +40,31 @@ To begin, we have to configure a new VM in VirtualBox.
         Host Port: 2222
         Guest Port: 22
 
+Create VM in VirtualBox with GUI
+--------------
+To begin, we have to configure a new VM in VirtualBox.
+
+    Name: vagrant-{distro}-{version}
+    Type: Linux
+    Version: {distro} (64bit)
+    Memory: 2048MB++ 
+    CPU: 1 or 2
+    32MB Video RAM with 3D Acceleration to support GUI Desktop
+    Virtual Disk
+        VMDK (Dynamic)
+        Size: ~50GB
+    Disable Audio
+    Disable USB
+    Set Network Adapter 1 to NAT with Port Forwarding
+        Name: SSH
+        Protocol: TCP
+        Host Port: 2222
+        Guest Port: 22
+
 Installation
 --------------
 
-Download [CentOS 6.5 minimal](http://wiki.centos.org/Manuals/ReleaseNotes/CentOSMinimalCD6.5)
+Download [CentOS 6.5](http://mirror.centos.org/centos-6/6.5/isos/)
 	
     Host Name: vagrant-{distro}-{version-nr}
     Root Password: vagrant
@@ -57,19 +78,49 @@ VM Config
     
     $ service network restart
     
-##### Connect via Putty (not important)
+##### (optional) Connect via Putty or Git-Bash 
+    # Putty
     IP 127.0.0.1
     Port 2222 
+	
+	# Git-Bash
+	ssh -p 2222 root@localhost
+	or
+	ssh -p 2222 root@127.0.0.1
     
 #### Create User
     $ useradd -m -c "vagrant" vagrant
     $ passwd vagrant
 
-#### ADD vagrant User to Sudoers
+#### Add vagrant User to Sudoers
     $ visudo
     # Add the following line to the end of the file.
     vagrant 	ALL=(ALL) 	NOPASSWD:ALL
     [ESC] :wq
+
+#### Add TTY and SSH-Auth (see Error solving at the end)
+	$ visudo
+	
+	# Search "Default requiretty" and ignore it with #
+	# Default requiretty
+
+	# Search "Defaults env_keep" and add this new line at the end
+	Defaults env_keep+="SSH_AUTH_SOCK"
+	[ESC] :wq
+
+#### (optional) Disable Firewall (iptables) and IPv6
+	$ service iptables stop
+	$ chkconfig iptables off
+
+	$ vi /etc/sysctl.conf
+ 	# Add the following line to the end of the file.
+	# disable ipv6
+	net.ipv6.conf.all.disable_ipv6 = 1
+	net.ipv6.conf.default.disable_ipv6 = 1
+	[ESC] :wq
+ 
+	$ echo 1 > /proc/sys/net/ipv6/conf/all/disable_ipv6
+	$ echo 1 > /proc/sys/net/ipv6/conf/default/disable_ipv6
     
 #### Repos hinzufügen
     # EPEL
@@ -80,7 +131,6 @@ VM Config
 
 #### Update Packages
     $ yum update -y
-    $ yum upgrade -y
     $ shutdown -r now
     
 #### Packages installieren
@@ -119,11 +169,21 @@ VM Config
     $ chmod 0600 .ssh/authorized_keys
     $ chown -R vagrant .ssh/
 
+#### Cleanup
+	$ rm -rf /tmp/*
+	$ rm -f /var/log/wtmp
+	$ rm -f /var/log/btmp
+	$ yum clean all
+	$ history -c
+
+	$ shutdown -h now
+
 #### Create the Box
     # cd to Dir to Export Base-Box
     $ vagrant package --base vagrant-{distro}-{version}
     
     ### SAMPLE
+    # cd to Dir to Export Base-Box
     $ vagrant package --base vagrant-centos-6.5
     $ mv package.box centos65-x86_64-20140707.box
 
@@ -144,6 +204,12 @@ VM Config
     # Edit vagrantfile from actVM
     add Line 
 	    => config.ssh.pty = true 
+
+### Vagrantfile (with GUI and more memory)
+	config.vm.provider "virtualbox" do |vb|
+		vb.gui = true
+		vb.customize ["modifyvm", :id, "--memory", "4096"]
+  	end
 
 License
 --------------
