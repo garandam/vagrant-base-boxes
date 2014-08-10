@@ -1,0 +1,325 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset='utf-8'>
+    <meta http-equiv="X-UA-Compatible" content="chrome=1">
+    <link href='https://fonts.googleapis.com/css?family=Chivo:900' rel='stylesheet' type='text/css'>
+    <link rel="stylesheet" type="text/css" href="stylesheets/stylesheet.css" media="screen">
+    <link rel="stylesheet" type="text/css" href="stylesheets/pygment_trac.css" media="screen">
+    <link rel="stylesheet" type="text/css" href="stylesheets/print.css" media="print">
+    <!--[if lt IE 9]>
+    <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <title>Vagrant-base-boxes by garandam</title>
+  </head>
+
+  <body>
+    <div id="container">
+      <div class="inner">
+
+        <header>
+          <h1>Vagrant-base-boxes</h1>
+          <h2></h2>
+        </header>
+
+        <section id="downloads" class="clearfix">
+          <a href="https://github.com/garandam/vagrant-base-boxes/zipball/master" id="download-zip" class="button"><span>Download .zip</span></a>
+          <a href="https://github.com/garandam/vagrant-base-boxes/tarball/master" id="download-tar-gz" class="button"><span>Download .tar.gz</span></a>
+          <a href="https://github.com/garandam/vagrant-base-boxes" id="view-on-github" class="button"><span>View on GitHub</span></a>
+        </section>
+
+        <hr>
+
+        <section id="main_content">
+          <h1>
+<a name="vagrant-base-box-for-centos-65" class="anchor" href="#vagrant-base-box-for-centos-65"><span class="octicon octicon-link"></span></a>Vagrant base Box for CentOS 6.5</h1>
+
+<p>I created a base Box for Vagrant based on CentOS 6.5 Minimal Install.</p>
+
+<h3>
+<a name="features" class="anchor" href="#features"><span class="octicon octicon-link"></span></a>Features</h3>
+
+<ul>
+<li>root password is "vagrant"</li>
+<li>Default vagrant "insecure" key</li>
+<li>Added EPEL repository</li>
+<li>Added PUPPET repository</li>
+<li>Installed "Development Tools"</li>
+<li>Installed wget, man, bind-utils</li>
+<li>Installed puppet, facter</li>
+<li>Installed Virtualbox Guest Additions</li>
+</ul><h3>
+<a name="preconditions-windows" class="anchor" href="#preconditions-windows"><span class="octicon octicon-link"></span></a>PreConditions (Windows)</h3>
+
+<ul>
+<li>Vagrant (1.6.3)</li>
+<li><a href="https://github.com/mitchellh/vagrant/tree/master/keys">Vagrant SSH-"insecure"-Key</a></li>
+<li>VirtualBox (4.3.12)</li>
+<li>Putty or Git-Bash</li>
+</ul><h2>
+<a name="create-vm-in-virtualbox-without-gui" class="anchor" href="#create-vm-in-virtualbox-without-gui"><span class="octicon octicon-link"></span></a>Create VM in VirtualBox without GUI</h2>
+
+<p>To begin, we have to configure a new VM in VirtualBox.</p>
+
+<pre><code>Name: vagrant-{distro}-{version}
+Type: Linux
+Version: {distro} (64bit)
+Memory: 1024MB 
+CPU: 1
+Virtual Disk
+    VMDK (Dynamic)
+    Size: ~50GB
+Disable Audio
+Disable USB
+Set Network Adapter 1 to NAT with Port Forwarding
+    Name: SSH
+    Protocol: TCP
+    Host Port: 2222
+    Guest Port: 22
+</code></pre>
+
+<h2>
+<a name="create-vm-in-virtualbox-with-gui" class="anchor" href="#create-vm-in-virtualbox-with-gui"><span class="octicon octicon-link"></span></a>Create VM in VirtualBox with GUI</h2>
+
+<p>To begin, we have to configure a new VM in VirtualBox.</p>
+
+<pre><code>Name: vagrant-{distro}-{version}
+Type: Linux
+Version: {distro} (64bit)
+Memory: 2048MB++ 
+CPU: 1 or 2
+32MB Video RAM with 3D Acceleration to support GUI Desktop
+Virtual Disk
+    VMDK (Dynamic)
+    Size: ~50GB
+Disable Audio
+Disable USB
+Set Network Adapter 1 to NAT with Port Forwarding
+    Name: SSH
+    Protocol: TCP
+    Host Port: 2222
+    Guest Port: 22
+</code></pre>
+
+<h2>
+<a name="installation" class="anchor" href="#installation"><span class="octicon octicon-link"></span></a>Installation</h2>
+
+<p>Download <a href="http://mirror.centos.org/centos-6/6.5/isos/">CentOS 6.5</a></p>
+
+<pre><code>Host Name: vagrant-{distro}-{version-nr}
+Root Password: vagrant
+</code></pre>
+
+<h2>
+<a name="vm-config" class="anchor" href="#vm-config"><span class="octicon octicon-link"></span></a>VM Config</h2>
+
+<h4>
+<a name="network-interface" class="anchor" href="#network-interface"><span class="octicon octicon-link"></span></a>Network interface</h4>
+
+<pre><code>vi /etc/sysconfig/network-scripts/ifcfg-eth0
+ONBOOT= yes
+[ESC] :wq
+
+$ service network restart
+</code></pre>
+
+<h5>
+<a name="optional-connect-via-putty-or-git-bash" class="anchor" href="#optional-connect-via-putty-or-git-bash"><span class="octicon octicon-link"></span></a>(optional) Connect via Putty or Git-Bash</h5>
+
+<pre><code># Putty
+IP 127.0.0.1
+Port 2222 
+
+# Git-Bash
+ssh -p 2222 root@localhost
+or
+ssh -p 2222 root@127.0.0.1
+</code></pre>
+
+<h4>
+<a name="create-user" class="anchor" href="#create-user"><span class="octicon octicon-link"></span></a>Create User</h4>
+
+<pre><code>$ useradd -m -c "vagrant" vagrant
+$ passwd vagrant
+</code></pre>
+
+<h4>
+<a name="add-vagrant-user-to-sudoers" class="anchor" href="#add-vagrant-user-to-sudoers"><span class="octicon octicon-link"></span></a>Add vagrant User to Sudoers</h4>
+
+<pre><code>$ visudo
+# Add the following line to the end of the file.
+vagrant     ALL=(ALL)   NOPASSWD:ALL
+[ESC] :wq
+</code></pre>
+
+<h4>
+<a name="add-tty-and-ssh-auth-see-error-solving-at-the-end" class="anchor" href="#add-tty-and-ssh-auth-see-error-solving-at-the-end"><span class="octicon octicon-link"></span></a>Add TTY and SSH-Auth (see Error solving at the end)</h4>
+
+<pre><code>$ visudo
+
+# Search "Default requiretty" and ignore it with #
+# Default requiretty
+
+# Search "Defaults env_keep" and add this new line at the end
+Defaults env_keep+="SSH_AUTH_SOCK"
+[ESC] :wq
+</code></pre>
+
+<h4>
+<a name="optional-disable-firewall-iptables-and-ipv6" class="anchor" href="#optional-disable-firewall-iptables-and-ipv6"><span class="octicon octicon-link"></span></a>(optional) Disable Firewall (iptables) and IPv6</h4>
+
+<pre><code>$ service iptables stop
+$ chkconfig iptables off
+
+$ vi /etc/sysctl.conf
+# Add the following line to the end of the file.
+# disable ipv6
+net.ipv6.conf.all.disable_ipv6 = 1
+net.ipv6.conf.default.disable_ipv6 = 1
+[ESC] :wq
+
+$ echo 1 &gt; /proc/sys/net/ipv6/conf/all/disable_ipv6
+$ echo 1 &gt; /proc/sys/net/ipv6/conf/default/disable_ipv6
+</code></pre>
+
+<h4>
+<a name="repos-hinzuf%C3%BCgen" class="anchor" href="#repos-hinzuf%C3%BCgen"><span class="octicon octicon-link"></span></a>Repos hinzufügen</h4>
+
+<pre><code># EPEL
+$ rpm -Uvh http://dl.fedoraproject.org/pub/epel/6/x86_64/epel-release-6-8.noarch.rpm
+
+# PUPPET
+$ rpm -ivh http://yum.puppetlabs.com/el/6/products/x86_64/puppetlabs-release-6-7.noarch.rpm
+</code></pre>
+
+<h4>
+<a name="update-packages" class="anchor" href="#update-packages"><span class="octicon octicon-link"></span></a>Update Packages</h4>
+
+<pre><code>$ yum update -y
+$ shutdown -r now
+</code></pre>
+
+<h4>
+<a name="packages-installieren" class="anchor" href="#packages-installieren"><span class="octicon octicon-link"></span></a>Packages installieren</h4>
+
+<pre><code>$ yum groupinstall "Development Tools"
+$ yum install kernel-devel kernel-headers wget man bind-utils.x86_64
+$ yum install dkms
+$ yum install puppet facter
+</code></pre>
+
+<h4>
+<a name="openssh-configuration" class="anchor" href="#openssh-configuration"><span class="octicon octicon-link"></span></a>OpenSSH configuration</h4>
+
+<pre><code>$ vi /etc/ssh/sshd_config
+Port 22
+PubKeyAuthentication yes
+AuthorizedKeysFile ~/.ssh/authorized_keys
+PermitEmptyPasswords no
+UseDNS no
+
+$ service sshd restart
+</code></pre>
+
+<h4>
+<a name="mount-virtualbox-guest-additions" class="anchor" href="#mount-virtualbox-guest-additions"><span class="octicon octicon-link"></span></a>Mount VirtualBox Guest Additions</h4>
+
+<pre><code>$ mkdir /media/VirtualBoxGuestAdditions
+$ mount -r /dev/cdrom /media/VirtualBoxGuestAdditions
+</code></pre>
+
+<h4>
+<a name="install-virtualbox-guest-additions" class="anchor" href="#install-virtualbox-guest-additions"><span class="octicon octicon-link"></span></a>Install VirtualBox Guest Additions</h4>
+
+<pre><code>$ cd /media/VirtualBoxGuestAdditions
+$ ./VBoxLinuxAdditions.run
+
+$ shutdown -r now
+</code></pre>
+
+<h4>
+<a name="vagrant-openssh-keys" class="anchor" href="#vagrant-openssh-keys"><span class="octicon octicon-link"></span></a>Vagrant OpenSSH-Keys</h4>
+
+<pre><code>$ su vagrant
+$ cd
+$ mkdir .ssh
+$ cd .ssh/
+$ wget https://raw.github.com/mitchellh/vagrant/master/keys/vagrant.pub -O authorized_keys
+$ chmod 0700 .ssh/
+$ chmod 0600 .ssh/authorized_keys
+$ chown -R vagrant .ssh/
+</code></pre>
+
+<h4>
+<a name="cleanup" class="anchor" href="#cleanup"><span class="octicon octicon-link"></span></a>Cleanup</h4>
+
+<pre><code>$ rm -rf /tmp/*
+$ rm -f /var/log/wtmp
+$ rm -f /var/log/btmp
+$ yum clean all
+$ history -c
+
+$ shutdown -h now
+</code></pre>
+
+<h4>
+<a name="create-the-box" class="anchor" href="#create-the-box"><span class="octicon octicon-link"></span></a>Create the Box</h4>
+
+<pre><code># cd to Dir to Export Base-Box
+$ vagrant package --base vagrant-{distro}-{version}
+
+### SAMPLE
+# cd to Dir to Export Base-Box
+$ vagrant package --base vagrant-centos-6.5
+$ mv package.box centos65-x86_64-20140707.box
+</code></pre>
+
+<h4>
+<a name="testing--working-with-the-box" class="anchor" href="#testing--working-with-the-box"><span class="octicon octicon-link"></span></a>Testing &amp; Working with the Box</h4>
+
+<pre><code>$ vagrant box add {boxname} package.box
+$ vagrant init {boxname}
+$ vagrant up
+
+### SAMPLE
+$ vagrant box add centos65 centos65-x86_64-20140707.box
+$ mkdir test_env
+$ cd test_env/
+$ vagrant init centos65
+$ vagrant up
+$ vagrant ssh
+</code></pre>
+
+<h3>
+<a name="error-solving-sudo-sorry-you-must-have-a-tty-to-run-sudo" class="anchor" href="#error-solving-sudo-sorry-you-must-have-a-tty-to-run-sudo"><span class="octicon octicon-link"></span></a>Error solving (sudo: sorry, you must have a tty to run sudo)</h3>
+
+<pre><code># Edit vagrantfile from actVM
+add Line 
+    =&gt; config.ssh.pty = true 
+</code></pre>
+
+<h3>
+<a name="vagrantfile-with-gui-and-more-memory" class="anchor" href="#vagrantfile-with-gui-and-more-memory"><span class="octicon octicon-link"></span></a>Vagrantfile (with GUI and more memory)</h3>
+
+<pre><code>config.vm.provider "virtualbox" do |vb|
+    vb.gui = true
+    vb.customize ["modifyvm", :id, "--memory", "4096"]
+end
+</code></pre>
+
+<h2>
+<a name="license" class="anchor" href="#license"><span class="octicon octicon-link"></span></a>License</h2>
+
+<p>MIT</p>
+        </section>
+
+        <footer>
+          Vagrant-base-boxes is maintained by <a href="https://github.com/garandam">garandam</a><br>
+          This page was generated by <a href="http://pages.github.com">GitHub Pages</a>. Tactile theme by <a href="https://twitter.com/jasonlong">Jason Long</a>.
+        </footer>
+
+        
+      </div>
+    </div>
+  </body>
+</html>
